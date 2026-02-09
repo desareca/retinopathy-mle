@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.Python
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Data (usaremos DVC)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Models
+models/checkpoints/*
+models/production/*
+!models/checkpoints/.gitkeep
+!models/production/.gitkeep
+*.h5
+*.tflite
+
+# MLflow
+mlruns/
+experiments/mlruns/
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
