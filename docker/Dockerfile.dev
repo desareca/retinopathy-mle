@@ -1,0 +1,27 @@
+FROM tensorflow/tensorflow:2.15.0-gpu
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    wget \
+    nano \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements
+COPY requirements.txt .
+
+# Instalar dependencias Python
+RUN pip install --no-cache-dir --ignore-installed -r requirements.txt
+
+# Instalar Kaggle CLI
+RUN pip install --no-cache-dir --ignore-installed kaggle
+
+# Exponer puertos
+EXPOSE 5000 8888
+
+# Comando por defecto
+CMD ["/bin/bash"]
