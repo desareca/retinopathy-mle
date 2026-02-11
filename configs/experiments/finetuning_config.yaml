@@ -1,0 +1,15 @@
+experiment_name: "finetuning-none"
+filter_name: "none"
+
+model:
+  freeze_base: false
+  unfreeze_from_layer: 100  # Descongelar desde capa 100
+
+training:
+  epochs: 20
+  batch_size: 32
+  learning_rate: 0.00001  # LR muy bajo para fine-tuning
+  
+callbacks:
+  early_stopping_patience: 8
+  reduce_lr_patience: 4
