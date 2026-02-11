@@ -15,6 +15,7 @@ from datetime import datetime
 
 from src.data.dataset import create_dataset
 from src.models.model import create_model, compile_model
+from src.models.metrics import SparseRecallCallback
 
 
 def calculate_class_weights(labels):
@@ -108,26 +109,33 @@ def train_model(
         
         checkpoint_path = f'/app/models/checkpoints/{experiment_id}_best.h5'
         final_model_path = f'/app/models/production/{experiment_id}_final.h5'
-
+        
+        # Crear recall callback
+        recall_callback = SparseRecallCallback(val_dataset)
+        
         callbacks = [
+            recall_callback,
             tf.keras.callbacks.EarlyStopping(
-                monitor='val_loss',
+                monitor='val_recall',
                 patience=5,
                 restore_best_weights=True,
-                verbose=1
+                verbose=1,
+                mode='max'
             ),
             tf.keras.callbacks.ReduceLROnPlateau(
-                monitor='val_loss',
+                monitor='val_recall',
                 factor=0.5,
                 patience=3,
                 min_lr=1e-7,
-                verbose=1
+                verbose=1,
+                mode='max'
             ),
             tf.keras.callbacks.ModelCheckpoint(
                 filepath=checkpoint_path,
-                monitor='val_loss',
+                monitor='val_recall',
                 save_best_only=True,
-                verbose=1
+                verbose=1,
+                mode='max'
             )
         ]
         
@@ -147,7 +155,9 @@ def train_model(
             'train_loss': history.history['loss'][-1],
             'train_accuracy': history.history['accuracy'][-1],
             'val_loss': history.history['val_loss'][-1],
-            'val_accuracy': history.history['val_accuracy'][-1]
+            'val_accuracy': history.history['val_accuracy'][-1],
+            'val_recall': history.history['val_recall'][-1],
+            'val_precision': history.history['val_precision'][-1],
         }
         
         for metric, value in final_metrics.items():

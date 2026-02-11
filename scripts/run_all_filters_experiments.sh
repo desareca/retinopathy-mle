@@ -12,9 +12,18 @@ echo ""
 echo "→ Baseline 2: Ben Graham (30 épocas)"
 python /app/scripts/run_baseline_ben_graham.py
 
+echo "=========================================="
+echo "EJECUTANDO EXPERIMENTOS CON FILTROS"
+echo "=========================================="
+
+echo ""
+echo "→ Filtros: (30 épocas)"
+python /app/scripts/run_filter_experiments.py
+
+
 echo ""
 echo "=========================================="
-echo "✓ TODOS LOS BASELINES COMPLETADOS"
+echo "✓ TODOS LOS EXPERIMENTOS COMPLETADOS"
 echo "=========================================="
 echo ""
 echo "Para ver resultados:"

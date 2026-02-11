@@ -40,21 +40,15 @@ def create_model(input_shape=(224, 224, 3), num_classes=2, freeze_base=True):
 
 def compile_model(model, learning_rate=0.001):
     """
-    Compila el modelo
-    
-    Args:
-        model: Modelo a compilar
-        learning_rate: Learning rate
-    
-    Returns:
-        Modelo compilado
+    Compila el modelo optimizando por recall
+    Usa SparseTopKCategoricalAccuracy compatible con sparse labels
     """
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss='sparse_categorical_crossentropy',
         metrics=[
             'accuracy',
-            tf.keras.metrics.SparseCategoricalAccuracy(name='sparse_accuracy'),
+            tf.keras.metrics.SparseTopKCategoricalAccuracy(k=1, name='sparse_accuracy'),
         ]
     )
     
