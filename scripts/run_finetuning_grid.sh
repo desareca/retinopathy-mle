@@ -12,7 +12,7 @@ BATCH_SIZE=32
 FILTERS=("none" "gaussian_clahe" "gaussian" "clahe")
 
 # Valores de unfreeze_from a probar
-UNFREEZE_VALUES=(150 125 100 75)
+UNFREEZE_VALUES=(140 120 100 80)
 
 # Contadores
 TOTAL_EXPERIMENTS=$((${#FILTERS[@]} * ${#UNFREEZE_VALUES[@]}))
@@ -26,7 +26,7 @@ echo "  Unfreeze values: ${UNFREEZE_VALUES[@]}"
 echo "  Épocas: $EPOCHS"
 echo "  Batch size: $BATCH_SIZE"
 echo "  Total experimentos: $TOTAL_EXPERIMENTS"
-echo "  Tiempo estimado: ~2.5 horas"
+echo "  Tiempo estimado: ~3.5 horas"
 echo "=========================================="
 
 # Log file
@@ -37,9 +37,9 @@ echo ""
 # Función para estimar tiempo
 estimate_time() {
     local unfreeze=$1
-    if [ $unfreeze -ge 150 ]; then
+    if [ $unfreeze -ge 140 ]; then
         echo "8"
-    elif [ $unfreeze -ge 125 ]; then
+    elif [ $unfreeze -ge 120 ]; then
         echo "12"
     elif [ $unfreeze -ge 100 ]; then
         echo "16"
