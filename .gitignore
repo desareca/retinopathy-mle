@@ -40,3 +40,4 @@ experiments/mlruns/
 # OS
 .DS_Store
 Thumbs.db
+*.pem
