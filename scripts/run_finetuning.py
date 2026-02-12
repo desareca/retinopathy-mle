@@ -24,7 +24,7 @@ def run_finetuning(
     filter_name='none',
     epochs=20,
     batch_size=32,
-    learning_rate=1e-5,
+    learning_rate=0.0001,
     unfreeze_from_layer=100
 ):
     """
@@ -108,21 +108,30 @@ def run_finetuning(
         
         # Congelar selectivamente
         base_model = model.layers[0]
-        total_layers = len(base_model.layers)
+        total_base_layers  = len(base_model.layers)
         
         for i, layer in enumerate(base_model.layers):
             if i < unfreeze_from_layer:
                 layer.trainable = False
             else:
                 layer.trainable = True
+
+        # Contar capas entrenables DENTRO del base_model
+        trainable_base_layers = len([l for l in base_model.layers if l.trainable])
+        frozen_base_layers = len([l for l in base_model.layers if not l.trainable])
+
+        head_layers = len(model.layers) - 1  # Todas menos la base
         
         trainable_layers = len([l for l in model.layers if l.trainable])
         frozen_layers = len([l for l in model.layers if not l.trainable])
         
-        print(f"\nTotal capas base: {total_layers}")
-        print(f"Capas congeladas: {frozen_layers}")
-        print(f"Capas entrenables: {trainable_layers}")
-        
+        print(f"\nTotal capas en MobileNetV2: {total_base_layers}")
+        print(f"Capas MobileNetV2 congeladas: {frozen_base_layers}")
+        print(f"Capas MobileNetV2 entrenables: {trainable_base_layers}")
+        print(f"Capas del head (siempre entrenables): {head_layers}")
+        print(f"TOTAL capas entrenables: {trainable_base_layers + head_layers}")
+
+
         # Compilar con LR muy bajo
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
@@ -217,8 +226,8 @@ if __name__ == "__main__":
                        help='Número de épocas (default: 20)')
     parser.add_argument('--batch_size', type=int, default=32,
                        help='Tamaño del batch (default: 32)')
-    parser.add_argument('--lr', type=float, default=1e-5,
-                       help='Learning rate (default: 1e-5)')
+    parser.add_argument('--learning_rate', type=float, default=1e-4,
+                       help='Learning rate (default: 1e-4)')
     parser.add_argument('--unfreeze_from', type=int, default=100,
                        help='Desde qué capa descongelar (default: 100)')
     
@@ -228,7 +237,7 @@ if __name__ == "__main__":
         filter_name=args.filter_name,
         epochs=args.epochs,
         batch_size=args.batch_size,
-        learning_rate=args.lr,
+        learning_rate=args.learning_rate,
         unfreeze_from_layer=args.unfreeze_from
     )
     

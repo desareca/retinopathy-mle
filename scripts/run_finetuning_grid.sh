@@ -5,8 +5,9 @@ echo "GRID SEARCH: FINE-TUNING"
 echo "=========================================="
 
 # Configuración
-EPOCHS=20
+EPOCHS=30
 BATCH_SIZE=32
+LEARNING_RATE=0.0001
 
 # Filtros a probar (basados en mejores resultados baseline)
 FILTERS=("none" "gaussian_clahe" "gaussian" "clahe")
@@ -25,6 +26,7 @@ echo "  Filtros: ${FILTERS[@]}"
 echo "  Unfreeze values: ${UNFREEZE_VALUES[@]}"
 echo "  Épocas: $EPOCHS"
 echo "  Batch size: $BATCH_SIZE"
+echo "  Learning rate: $LEARNING_RATE"
 echo "  Total experimentos: $TOTAL_EXPERIMENTS"
 echo "  Tiempo estimado: ~3.5 horas"
 echo "=========================================="
@@ -75,6 +77,7 @@ do
             --unfreeze_from $unfreeze \
             --epochs $EPOCHS \
             --batch_size $BATCH_SIZE \
+            --learning_rate $LEARNING_RATE \
             2>&1 | tee -a $LOG_FILE
         
         EXIT_CODE=${PIPESTATUS[0]}
