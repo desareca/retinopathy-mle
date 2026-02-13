@@ -164,6 +164,22 @@ custom_css = """
     transform: scale(1.1);
     background: transparent !important;
 }
+
+.col-izq {
+    padding: 5px 15px 15px 15px;
+    border-left: 4px solid #7192ff;
+    background: linear-gradient(to right, #7192ff15, transparent);
+}
+
+.disclaimer_message {
+    padding: 5px 15px 7px 15px;
+    border-left: 4px solid #ffb85b;
+    background: linear-gradient(to right, #ffb85b30, transparent);
+}
+
+.autor {
+    text-align: center;
+}
 """
 
 with gr.Blocks(theme=theme, css=custom_css) as demo:
@@ -190,9 +206,7 @@ with gr.Blocks(theme=theme, css=custom_css) as demo:
     with gr.Row():
         # Columna izquierda: Input
         with gr.Column(scale=27, elem_classes="col-metrics"):
-            output_text = gr.Markdown("""
-                <div style="padding: 5px 15px 15px 15px; border-left: 4px solid #7192ff; background: linear-gradient(to right, #7192ff15, transparent);">
-                
+            gr.Markdown("""
                 ## 📊 Métricas del Modelo:
                 - **Recall:** 85.18% (detecta 85 de cada 100 casos enfermos)
                 - **Accuracy:** 86.72%
@@ -207,8 +221,8 @@ with gr.Blocks(theme=theme, css=custom_css) as demo:
                 - Usa imágenes claras de fondo de ojo
                 - Formato recomendado: PNG o JPG
                 - La imagen se redimensiona automáticamente
-                </div>
-                """)
+                """,
+                elem_classes=["col-izq"])
             
         with gr.Column(scale=43, elem_classes="col-upload-image"):
             input_image = gr.Image(
@@ -259,21 +273,19 @@ with gr.Blocks(theme=theme, css=custom_css) as demo:
     """)
 
     gr.Markdown("""
-    <div style="padding: 5px 15px 7px 15px; border-left: 4px solid #ffb85b; background: linear-gradient(to right, #ffb85b30, transparent);">
-    
     **⚠️ Disclaimer:** Este modelo es solo para fines educativos y demostrativos. 
     No debe usarse para diagnóstico médico real. Consulte a un profesional de la salud.
-                
-    </div>
+    """,
+    elem_classes=["disclaimer_message"])
+
+    gr.Markdown("""
+    ---                   
     """)
 
     gr.Markdown("""
-    ---
-    
-    <p style="text-align: center;">
-    Desarrollado por Carlos Saquel Depaoli
-    </p>                   
-    """)
+    Desarrollado por Carlos Saquel Depaoli        
+    """,
+    elem_classes=["autor"])
 
 # Lanzar aplicación
 if __name__ == "__main__":
