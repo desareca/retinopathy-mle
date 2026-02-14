@@ -3,7 +3,7 @@ FastAPI REST API for Retinopathy Detector
 """
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel
 from typing import Optional
 import tensorflow as tf
@@ -98,19 +98,123 @@ def preprocess_clahe(image_array: np.ndarray) -> np.ndarray:
     return img_normalized
 
 
-@app.get("/", tags=["Root"])
+@app.get("/", response_class=HTMLResponse, tags=["Root"])
 async def root():
-    """Endpoint raíz - Información de la API"""
-    return {
-        "message": "Retinopathy Detector API",
-        "version": "1.0.0",
-        "endpoints": {
-            "health": "/health",
-            "predict": "/predict",
-            "docs": "/docs"
-        },
-        "note": "⚠️ Free tier: Primera request puede tardar 30-60s (cold start)"
-    }
+    """Página principal con información de la API"""
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Retinopathy Detector API</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                max-width: 800px;
+                margin: 10px auto;
+                padding: 10px;
+                background: white;
+                color: white;
+            }
+            .container {
+                background: linear-gradient(135deg, #667eeadd 0%, #4b52a2dd 100%);
+                padding: 30px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+            }
+            h1 { margin-top: 0; }
+            .endpoint {
+                background: rgba(0, 0, 0, 0.2);
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 8px;
+            }
+            .endpoint code {
+                background: rgba(255, 255, 255, 0.2);
+                padding: 2px 8px;
+                border-radius: 4px;
+            }
+            .warning {
+                background: rgba(255, 200, 0, 0.3);
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid #ffc107;
+            }
+            a {
+                color: #c1e2ff;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            a:hover { text-decoration: underline; }
+            .badge {
+                display: inline-block;
+                padding: 5px 10px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                font-size: 0.9em;
+                margin: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🩺 Retinopathy Detector API</h1>
+            <p>API REST para detección de retinopatía diabética usando Deep Learning</p>
+            
+            <div class="badge">Version 1.0.0</div>
+            <div class="badge">FastAPI</div>
+            <div class="badge">TensorFlow 2.15</div>
+            
+            <div class="warning">
+                <strong>⚠️ Free Tier Notice:</strong><br>
+                La primera request después de 15 minutos de inactividad tardará 
+                <strong>30-60 segundos</strong> mientras el servicio se reactiva (cold start).
+            </div>
+            
+            <h2>📚 Endpoints</h2>
+            
+            <div class="endpoint">
+                <strong>GET /health</strong><br>
+                Verificar estado de la API y modelo
+            </div>
+            
+            <div class="endpoint">
+                <strong>POST /predict</strong><br>
+                Realizar predicción en imagen de retina
+            </div>
+            
+            <div class="endpoint">
+                <strong>GET /docs</strong><br>
+                Documentación interactiva (Swagger UI)
+            </div>
+            
+            <h2>🚀 Pruébala Ahora</h2>
+            <p>
+                <a href="https://retinopathy-api.onrender.com/docs" target="_blank">→ Abrir Documentación Interactiva</a>
+            </p>
+            
+            <h2>📊 Métricas del Modelo</h2>
+            <ul>
+                <li><strong>Recall:</strong> 85.18%</li>
+                <li><strong>Accuracy:</strong> 86.72%</li>
+                <li><strong>Precision:</strong> 97.73%</li>
+            </ul>
+            
+            <h2>🔗 Links</h2>
+            <p>
+                <a href="https://huggingface.co/spaces/desareca/retinopathy-detector">Demo Visual</a> |
+                <a href="https://github.com/desareca/retinopathy-api">GitHub API</a> |
+                <a href="https://github.com/desareca/retinopathy-mle">GitHub Proyecto</a>
+            </p>
+            
+            <p style="margin-top: 30px; font-size: 0.9em; opacity: 0.9;">
+                Desarrollado por Carlos Saquel Depaoli
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
