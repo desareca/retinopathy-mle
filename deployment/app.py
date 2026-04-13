@@ -109,7 +109,8 @@ function() {
 }
 """
 
-theme = gr.themes.Glass(
+# theme = gr.themes.Glass(
+theme = gr.themes.Soft(
     #primary_hue="lime", 
     #secondary_hue="lime",
     font=[gr.themes.GoogleFont("Open Sans"), "Arial", "sans-serif"]
@@ -236,7 +237,7 @@ with gr.Blocks(theme=theme, css=custom_css) as demo:
                 "🔍 Analizar Imagen",
                 elem_classes="button-upload-image",
                 variant="primary",
-                size="lg"
+                # size="lg"
             )
 
         # Columna derecha: Output
