@@ -26,7 +26,91 @@ class RetinopathyPredictor:
             0: "Healthy (Sano)",
             1: "Disease Risk (Enfermo)"
         }
+
+        # Modelo Grad-CAM: salida en la última capa conv de MobileNetV2
+        # 'Conv_1' es la última capa convolucional de MobileNetV2
+        self._gradcam_model = self._build_gradcam_model()
     
+    def _build_gradcam_model(self):
+        """
+        Construye modelo auxiliar para Grad-CAM.
+        Resuelve la desconexión entre el grafo Sequential y la base MobileNetV2.
+        """
+        base_model = self.model.layers[0]  # mobilenetv2_1.00_224
+        
+        # Usar Conv_1_bn (post-BN) o Conv_1 — usamos out_relu para activaciones finales
+        last_conv_layer_name = "Conv_1"
+        
+        print(f"✓ Grad-CAM usará capa: {last_conv_layer_name}")
+        
+        # Modelo 1: input de la BASE → (activaciones Conv_1, output de la base)
+        base_grad_model = tf.keras.models.Model(
+            inputs=base_model.inputs,          # input_1
+            outputs=[
+                base_model.get_layer(last_conv_layer_name).output,
+                base_model.output
+            ]
+        )
+        
+        # Modelo 2: output de la base → predicción final (resto del Sequential)
+        # Capas después de la base: GAP, Dropout, Dense, Dropout, Dense
+        self._head_layers = self.model.layers[1:]  # todo lo que sigue a MobileNetV2
+        
+        print(f"✓ Capas del head: {[l.name for l in self._head_layers]}")
+        return base_grad_model
+
+
+    def gradcam(self, image, class_id=None):
+        """
+        Genera heatmap Grad-CAM superpuesto sobre la imagen original.
+        """
+        orig_h, orig_w = image.shape[:2]
+
+        img_processed = self.preprocess_clahe(image)
+        img_batch     = np.expand_dims(img_processed, axis=0)  # (1, 224, 224, 3)
+
+        with tf.GradientTape() as tape:
+            img_tensor = tf.cast(img_batch, tf.float32)
+            tape.watch(img_tensor)
+            
+            # Pasar por base → obtener activaciones conv y output de base
+            conv_outputs, base_output = self._gradcam_model(img_tensor)
+            
+            # Pasar output de base por el head (GAP, Dense, etc.)
+            x = base_output
+            for layer in self._head_layers:
+                x = layer(x, training=False)
+            predictions = x
+
+            if class_id is None:
+                class_id = int(tf.argmax(predictions[0]))
+
+            class_score = predictions[:, class_id]
+
+        # Gradientes respecto a activaciones de Conv_1
+        grads       = tape.gradient(class_score, conv_outputs)  # (1, 7, 7, 1280)
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))    # (1280,)
+
+        heatmap = conv_outputs[0] @ pooled_grads[..., tf.newaxis]  # (7, 7, 1)
+        heatmap = tf.squeeze(heatmap)                               # (7, 7)
+        heatmap = tf.nn.relu(heatmap).numpy()
+
+        if heatmap.max() > 0:
+            heatmap = heatmap / heatmap.max()
+
+        # Redimensionar y colorear
+        heatmap_resized  = cv2.resize(heatmap, (orig_w, orig_h))
+        heatmap_uint8    = np.uint8(255 * heatmap_resized)
+        heatmap_colored  = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
+        heatmap_rgb      = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+
+        # Imagen original uint8
+        orig_img = image.copy() if image.dtype == np.uint8 else np.uint8(image * 255)
+
+        # Superposición 60/40
+        superimposed = cv2.addWeighted(orig_img, 0.6, heatmap_rgb, 0.4, 0)
+        return superimposed
+
     def preprocess_clahe(self, image):
         """
         Aplicar preprocesamiento CLAHE a la imagen
@@ -95,10 +179,8 @@ class RetinopathyPredictor:
         
         return result
 
-
 # Función de prueba
 if __name__ == "__main__":
-    # Probar con el modelo
     model_path = "/app/models/production/FINAL_clahe_ft120_best.h5"
     
     predictor = RetinopathyPredictor(model_path)

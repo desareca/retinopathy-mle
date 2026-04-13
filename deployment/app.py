@@ -30,31 +30,24 @@ def predict_image(image):
         tuple: (texto_resultado, diccionario_probabilidades, imagen_comparacion)
     """
     if image is None:
-        return "⚠️ Por favor sube una imagen primero", None, None
-    
+        return "⚠️ Por favor sube una imagen primero", None
+
     # Convertir a numpy si es PIL
     if isinstance(image, Image.Image):
         image = np.array(image)
-    
+
     # Asegurar que sea RGB
     if len(image.shape) == 2:  # Grayscale
         image = np.stack([image] * 3, axis=-1)
     elif image.shape[2] == 4:  # RGBA
         image = image[:, :, :3]
-    
-    # Crear imagen procesada para comparación
-    img_resized = cv2.resize(image, (224, 224))
-    lab = cv2.cvtColor(img_resized, cv2.COLOR_RGB2LAB)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    lab[:, :, 0] = clahe.apply(lab[:, :, 0])
-    img_processed = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
-    
-    # Crear comparación
-    #comparison = create_comparison_image(img_resized, img_processed)
-    
+
     # Hacer predicción
     result = predictor.predict(image)
     print(result)
+
+    # Grad-CAM sobre la clase predicha
+    gradcam_img = predictor.gradcam(image, class_id=result['class_id'])
     
     # Formatear resultado
     class_name = result['class_name']
@@ -91,13 +84,7 @@ def predict_image(image):
     </div>
     """
     
-    # Diccionario para el gráfico de barras
-    probabilidades = {
-        "Sano": result['probabilities']['Healthy (Sano)'],
-        "Enfermo": result['probabilities']['Disease Risk (Enfermo)']
-    }
-    
-    return resultado_texto#, probabilidades#, comparison
+    return resultado_texto, gradcam_img
 
 
 # Crear interfaz
@@ -222,6 +209,12 @@ with gr.Blocks(theme=theme, css=custom_css) as demo:
                 - Usa imágenes claras de fondo de ojo
                 - Formato recomendado: PNG o JPG
                 - La imagen se redimensiona automáticamente
+
+                ## 🔥 Grad-CAM:
+                El mapa de calor muestra **qué zonas de la retina**
+                activaron la decisión del modelo.
+                - 🔴 **Rojo/Amarillo:** alta atención
+                - 🔵 **Azul:** baja atención
                 """,
                 elem_classes=["col-izq"])
             
@@ -243,18 +236,18 @@ with gr.Blocks(theme=theme, css=custom_css) as demo:
         # Columna derecha: Output
         with gr.Column(scale=30, elem_classes="col-results"):
             output_text = gr.Markdown(label="Resultado")
-            
-            #output_plot = gr.Label(
-            #    label="Probabilidades",
-            #    show_label=True,
-            #    num_top_classes=2
-            #)
+            output_gradcam = gr.Image(
+                label="🔥 Mapa de Atención Grad-CAM",
+                type="numpy",
+                interactive=False,
+                height=280
+            )
     
     # Conectar botón con función
     predict_btn.click(
         fn=predict_image,
         inputs=[input_image],
-        outputs=[output_text]#, output_plot]
+        outputs=[output_text, output_gradcam]
     )
 
     theme_btn.click(None, None, None, js=toggle_theme_js)
